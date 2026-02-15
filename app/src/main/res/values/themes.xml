@@ -1,0 +1,20 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.AccountingAndManagement" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <drawable name="diback">@android:drawable/dialog_holo_light_frame</drawable>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorBackgroundLite">#FFFFFF</color>
+    <color name="colorButton">#939393</color>
+    <color name="colorText">#000000</color>
+    <color name="colorTinyText">#7C7C7C</color>
+    <color name="colorPMItem">#C3C3C3</color>
+    <color name="colorBarrier">#E0E0E0</color>
+    <color name="coloricon">#1F1F1F</color>
+
+    <style name="Theme.AccountingAndManagement" parent="Base.Theme.AccountingAndManagement" />
+</resources>
