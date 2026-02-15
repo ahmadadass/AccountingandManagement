@@ -56,12 +56,3 @@ public class DataResponse {
     }
 
 }
-
-class insertTransactionQ{
-    public int insertId;
-    public insertTransactionQ(int insertId){
-        this.insertId = insertId;
-    }
-    //public int getInsertId(){return this.insertId;}
-
-}

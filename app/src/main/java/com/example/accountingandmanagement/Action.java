@@ -4,14 +4,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class Action {
     int id;
-    int local_id;
+    String local_id;
     int server_id;
     String paload;
     String table_name;
     String action_type;
     long time;
     int synced;
-    public Action(int id , int local_id ,@Nullable int server_id, String table_name, String action_type, long time, int synced, String paload){
+    public Action(int id , String local_id ,@Nullable int server_id, String table_name, String action_type, long time, int synced, String paload){
         this.id = id;
         this.local_id = local_id;
         this.server_id = server_id;
@@ -26,7 +26,7 @@ public class Action {
         return id;
     }
 
-    public int getLocal_id() {
+    public String getLocal_id() {
         return local_id;
     }
 

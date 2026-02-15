@@ -34,7 +34,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "accountingManager.db";
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 8;
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl("https://money-management-0301.netlify.app/") // <--- YOUR LINK HERE
@@ -118,7 +118,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_ACTIONS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_ACTIONS_TABLE_NAME + " TEXT NOT NULL," +
                 COL_ACTIONS_ACTION_TYPE + " TEXT NOT NULL," +
-                COL_ACTIONS_LOCAL_ID + " INTEGER NOT NULL," +
+                COL_ACTIONS_LOCAL_ID + " TEXT NOT NULL," +
                 COL_ACTIONS_SREVER_ID + " INTEGER ," +
                 COL_ACTIONS_PAYLOAD + " TEXT ," +
                 COL_ACTIONS_TIME + " INTEGER ," +
@@ -132,6 +132,61 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_OFFLINE_ACTIONS);
         onCreate(db);
     }
+
+    public void syncSingleAction(int ActionId, String uuid, String json){
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
+            @Override
+            public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
+
+                if (response.isSuccessful()) {
+                    setAsSyncedOfflineAction(ActionId);
+                } else {
+                    // keep unsynced
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DataResponse> call, Throwable t) {
+                // keep unsynced
+            }
+        });
+    }
+
+    /*private boolean isSyncing = false;
+
+public void syncPendingActions() {
+    if (isSyncing) return;
+
+    isSyncing = true;
+    syncNext();
+}
+
+private void syncNext() {
+    Action action = getNextUnsyncedAction();
+
+    if (action == null) {
+        isSyncing = false;
+        return;
+    }
+
+    syncSingleAction(action.getId(), action.getLocal_id(), action.getPaload());
+}*/
+    public void syncPendingActions() {
+
+        if (!NetworkUtils.isConnected(Contextt)) return;
+
+        ArrayList<Action> actions = getOfflineActions();
+
+        for (Action action : actions) {
+            syncSingleAction(action.getId(),action.getLocal_id(), action.getPaload());
+        }
+    }
+
     public void deleteDatabase(User user, ArrayList<Transaction> transactions, Settings settings){
         SQLiteDatabase db = this.getWritableDatabase();
         onUpgrade(db,DATABASE_VERSION-1,DATABASE_VERSION);
@@ -222,7 +277,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return rows > 0;
     }
     boolean added = false;
-    public boolean insertTransaction(String Name, Long Time, Double Amount, String Type, String Notes, String PaymentMethod, boolean Paid, boolean Marked) {
+    public void insertTransaction(String Name, Long Time, Double Amount, String Type, String Notes, String PaymentMethod, boolean Paid, boolean Marked) {
         Map<String, Object> root = new HashMap<>();
         root.put("action", "insert_transaction");
         root.put("token", token);
@@ -246,23 +301,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         String json = new Gson().toJson(root);
 
-        RequestBody body = RequestBody.create(
-                json,
-                MediaType.parse("application/json")
-        );
-        ProgressDialog pd = new ProgressDialog(Contextt);
-        pd.setMessage("Connecting to database...");
-        pd.show();
-
-        added = Boolean.parseBoolean(null);
-
         insertTransactionLocal(uuidBytes,user.getId(),Name,Time,Amount,Type,Notes,PaymentMethod,Paid, Marked);
 
+        addOfflineAction(TABLE_TRANSACTION,ACTION_INSART,uuid.toString(),json,0);
+
+        ArrayList<Action> allActions = getOfflineActions();
+
+        syncSingleAction(allActions.get(allActions.size()-1).getId(), uuid.toString(), json);
+/*
         apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
             @Override
             public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
-                pd.dismiss();
-
                 if (response.isSuccessful() && response.body() != null) {
                     // SUCCESS! You now have your data
                     //Log.v("apiService onResponse:", response.body().print());
@@ -291,7 +340,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Log.e("API", "Error: " + t.getMessage());
                 addOfflineAction(TABLE_TRANSACTION,ACTION_INSART,uuid.toString(),json,added ? 1 : 0);
             }
-        });/*
+        });
         int cunter = 0;
         while (added == Boolean.parseBoolean(null)) {
             cunter++;
@@ -302,7 +351,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 break;
             }
         }*/
-        return added;
     }
     public long insertTransactionLocal(byte[] id, int userId, String Name, Long Time, Double Amount, String Type, String Notes, String PaymentMethod, boolean Paid, boolean Marked) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -793,7 +841,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     int id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_ACTIONS_ID));
-                    int local_id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_ACTIONS_LOCAL_ID));
+                    String local_id = cursor.getString(cursor.getColumnIndexOrThrow(COL_ACTIONS_LOCAL_ID));
                     int server_id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_ACTIONS_SREVER_ID));
                     String paload = cursor.getString(cursor.getColumnIndexOrThrow(COL_ACTIONS_PAYLOAD));
                     String table_name = cursor.getString(cursor.getColumnIndexOrThrow(COL_ACTIONS_TABLE_NAME));

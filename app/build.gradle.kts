@@ -42,6 +42,8 @@ dependencies {
     // Optional: Log network requests to your console (very helpful for debugging)
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 
+    implementation ("com.google.firebase:firebase-messaging:23.4.0")
+
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")

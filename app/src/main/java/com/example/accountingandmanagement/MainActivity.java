@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     public static String token;
     private ApiService apiService;
     public boolean wifiConnected = false;
+    private NetworkListener networkListener;
+
 
     // In your Activity or Service
     private ConnectivityManager connectivityManager;
@@ -67,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
         et_username.setText("testuser");
         et_password.setText("123");
+
+        networkListener = new NetworkListener();
+        networkListener.start(this);
 
         btn_login.setOnClickListener( e ->{
             String username = et_username.getText().toString();
