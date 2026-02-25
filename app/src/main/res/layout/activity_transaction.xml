@@ -52,6 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_margin="8dp"
             android:text="Edit Transaction"
             android:textColor="@color/colorText"
             android:textSize="20sp" />
@@ -92,7 +93,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:text="Paid"
-                    android:textColor="@color/colorText"
+                    android:textColor="@color/white"
                     android:textSize="10sp" />
             </LinearLayout>
 
@@ -230,6 +231,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/tv_transaction_view_type" />
 
+            <Button
+                android:id="@+id/button"
+                android:layout_width="33dp"
+                android:layout_height="40dp"
+                android:background="@drawable/ic_action_bookmark"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_transaction_view_amount"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/tv_transaction_view_amount"
+                app:layout_constraintTop_toTopOf="@+id/tv_transaction_view_amount" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
@@ -255,6 +267,7 @@
         android:layout_marginTop="16dp"
         android:text="Date - Time - accunt name"
         android:textColor="@color/colorText"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/cardView"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 

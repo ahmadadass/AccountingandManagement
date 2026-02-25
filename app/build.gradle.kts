@@ -43,6 +43,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 
     implementation ("com.google.firebase:firebase-messaging:23.4.0")
+    implementation ("com.google.android.flexbox:flexbox:3.0.0")
 
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.12.0")

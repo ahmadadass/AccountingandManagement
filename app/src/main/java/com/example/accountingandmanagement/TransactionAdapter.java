@@ -17,12 +17,7 @@ public class TransactionAdapter extends BaseAdapter {
     private Context context;
     private List<Transaction> transactionList;
     private LayoutInflater inflater;
-
-    public static boolean nameVisibility = true;
-    public static boolean typeVisibility = false;
-    public static boolean notesVisibility = false;
-    public static boolean timeVisibility = true;
-
+    public static Settings settings = new Settings(1,1,true,false,false,true,"Bank,Cash,Other","allowance,salary,mortgage,transport,shopping,subscription"); // temp value have to change in the start. ,Show More
     @Override public int getCount() {
         return transactionList.size();
     }
@@ -90,22 +85,22 @@ public class TransactionAdapter extends BaseAdapter {
             // this is for the unpaid item.
         }
 
-        if (!nameVisibility)
+        if (!settings.getNameV())
             holder.nameView.setVisibility(View.GONE);
         else
             holder.nameView.setVisibility(View.VISIBLE);
 
-        if(!typeVisibility)
+        if(!settings.getTypeV())
             holder.typeView.setVisibility(View.GONE);
         else
             holder.typeView.setVisibility(View.VISIBLE);
 
-        if(!notesVisibility)
+        if(!settings.getNotesV())
             holder.notesView.setVisibility(View.GONE);
         else
             holder.notesView.setVisibility(View.VISIBLE);
 
-        if(!timeVisibility)
+        if(!settings.getTimeV())
             holder.timeView.setVisibility(View.GONE);
         else
             holder.timeView.setVisibility(View.VISIBLE);

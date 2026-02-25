@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
@@ -78,7 +77,7 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.ViewHolder
         public ViewHolder(View itemView){
             super(itemView);
 
-            this.paymentmethod = itemView.findViewById(R.id.tv_pament_method_item);
+            this.paymentmethod = itemView.findViewById(R.id.tv_payment_method_item);
             this.cardView = itemView.findViewById(R.id.cv_payment_method_item);
 
 

@@ -3,15 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="12dp">
 
 
     <ImageView
         android:id="@+id/iv_navigation_item_icon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_weight="0.1"
-        android:src="@drawable/not_paid" />
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="10dp"
+        android:layout_weight="0"
+        android:src="@drawable/not_paid"
+        app:srcCompat="@android:drawable/radiobutton_off_background" />
 
     <LinearLayout
         android:id="@+id/marg"
@@ -26,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical"
-            android:text="Sign in to Google Drive"
+            android:text="this is the main text"
             android:textColor="@color/colorText"
             android:textSize="18sp" />
 
@@ -39,6 +41,17 @@
             android:textColor="@color/colorTinyText"
             android:textSize="15sp"
             android:visibility="gone" />
+
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/iv_more_navigation_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="10dp"
+        android:layout_weight="0.1"
+        android:visibility="visible"
+        app:srcCompat="@drawable/ic_action_more_vartcal" />
 
 </LinearLayout>

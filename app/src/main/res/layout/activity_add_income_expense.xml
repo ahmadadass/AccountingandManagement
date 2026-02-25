@@ -18,7 +18,7 @@
 
     <Button
         android:id="@+id/btn_transaction_bookmark"
-        android:layout_width="40dp"
+        android:layout_width="33dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
@@ -215,7 +215,7 @@
         android:id="@+id/et_transaction_notes"
         style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="25dp"
         android:layout_marginEnd="16dp"
@@ -243,40 +243,22 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <GridView
-        android:id="@+id/gv_transaction_payment_method"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_transaction_payment_method"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="60dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="25dp"
-        android:choiceMode="singleChoice"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:horizontalSpacing="0dp"
-        android:numColumns="3"
+        android:layout_marginBottom="8dp"
+        android:foreground="?attr/selectableItemBackground"
         android:paddingTop="7dp"
-        android:verticalSpacing="5dp"
         app:layout_constraintBottom_toTopOf="@+id/btn_save_transaction"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintTop_toBottomOf="@+id/et_transaction_notes"
         tools:listitem="@layout/payment_method_item" />
-
-    <TextView
-        android:id="@+id/textView5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="25dp"
-        android:text="Payment Method"
-        android:textColor="@color/colorText"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_transaction_notes" />
 
     <TextView
         android:id="@+id/tv_transaction_title"
@@ -300,7 +282,7 @@
         android:textSize="20sp"
         android:visibility="gone"
         app:checkedState="checked"
-        app:layout_constraintBottom_toTopOf="@+id/gv_transaction_payment_method"
+        app:layout_constraintBottom_toTopOf="@+id/rv_transaction_payment_method"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guideline8"
         app:layout_constraintTop_toBottomOf="@+id/et_transaction_notes" />
@@ -322,9 +304,21 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="Paid"
-            android:textColor="@color/colorText"
+            android:textColor="@color/white"
             android:textSize="10sp" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Payment Method"
+        android:textColor="@color/colorText"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/rv_transaction_payment_method"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_transaction_notes" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

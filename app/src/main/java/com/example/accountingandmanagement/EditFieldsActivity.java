@@ -52,22 +52,18 @@ public class EditFieldsActivity extends AppCompatActivity {
 
         s_name.setOnClickListener( e-> {
             settings.setNameV(s_name.isChecked());
-            TransactionAdapter.nameVisibility = s_name.isChecked();
             adapter.notifyDataSetChanged();
         });
         s_type.setOnClickListener( e-> {
             settings.setTypeV(s_type.isChecked());
-            TransactionAdapter.typeVisibility = s_type.isChecked();
             adapter.notifyDataSetChanged();
         });
         s_notes.setOnClickListener( e-> {
             settings.setNotesV(s_notes.isChecked());
-            TransactionAdapter.notesVisibility = s_notes.isChecked();
             adapter.notifyDataSetChanged();
         });
         s_time.setOnClickListener( e-> {
             settings.setTimeV(s_time.isChecked());
-            TransactionAdapter.timeVisibility = s_time.isChecked();
             adapter.notifyDataSetChanged();
         });
 
@@ -77,8 +73,7 @@ public class EditFieldsActivity extends AppCompatActivity {
             Intent intent = new Intent(EditFieldsActivity.this,statisticsActivity.class);
             startActivity(intent);
 
-            db.updateSettings(s_name.isChecked(),s_type.isChecked(),s_notes.isChecked(),s_time.isChecked(),user.getId());
-
+            db.updateSettings(s_name.isChecked(),s_type.isChecked(),s_notes.isChecked(),s_time.isChecked(),user.getId(),settings.getPaymentMethodList(),settings.getTypeList());
         });
 
         btn_back_edit_fields.setOnClickListener( e-> {

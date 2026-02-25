@@ -22,11 +22,12 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/tv_pament_method_item"
+            android:id="@+id/tv_payment_method_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:text="pament method"
-            android:textColor="@color/colorText" />
+            android:layout_margin="6dp"
+            android:text="payment method"
+            android:textColor="@color/colorText"
+            android:textSize="16sp" />
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

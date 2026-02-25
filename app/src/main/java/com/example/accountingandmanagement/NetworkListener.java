@@ -13,8 +13,7 @@ public class NetworkListener {
 
     public void start(Context context) {
 
-        connectivityManager =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         networkCallback = new ConnectivityManager.NetworkCallback() {
 

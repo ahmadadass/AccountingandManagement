@@ -1,38 +1,39 @@
 package com.example.accountingandmanagement;
 
-import static com.example.accountingandmanagement.MainActivity.user;
+import static com.example.accountingandmanagement.TransactionAdapter.settings;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.DatePicker;
-import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.flexbox.FlexDirection;
+import com.google.android.flexbox.FlexWrap;
+import com.google.android.flexbox.FlexboxLayoutManager;
+import com.google.android.flexbox.JustifyContent;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import org.w3c.dom.Text;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -42,7 +43,6 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
     Transaction transaction = null;
     int position = -1;
     String paymentMethod = "";
-    List<String> paymentmethodList = new ArrayList<>();
 
     MaterialAutoCompleteTextView tv_transaction_date_picker;
     MaterialAutoCompleteTextView tv_transaction_time_picker;
@@ -57,7 +57,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
     TextInputEditText it_transaction_name;
     MaterialAutoCompleteTextView it_transaction_type;
     TextInputEditText it_transaction_notes;
-    GridView gv_transaction_payment_method;
+    RecyclerView rv_transaction_payment_method;
     View ly_paid_status_add_edit;
     TextView tv_paid_status_add_edit;
     boolean Paid = true;
@@ -73,6 +73,30 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
     int Minutes;
     int Seconds;
     DatabaseHelper db;
+    ArrayList<String> paymentMethodList;
+    PaymentMethodAdapter adapter;
+    @SuppressLint("NotifyDataSetChanged")
+    private final ActivityResultLauncher<Intent> addPaymentLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    paymentMethodList.clear();
+
+                    // 2. Fetch the newly updated list from your settings/database
+                    paymentMethodList.addAll(Settings.stringToArray(settings.getPaymentMethodList()));
+
+                    // 3. Make sure "Show More" is still at the bottom
+                    if (!paymentMethodList.contains("Show More")){
+                        paymentMethodList.add("Show More");
+                    }
+
+                    // 4. Tell the adapter the data has changed so the screen updates!
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+    );
 
     @SuppressLint({"WrongViewCast", "MissingInflatedId"})
     @Override
@@ -95,19 +119,20 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         it_transaction_name = findViewById(R.id.it_transaction_name);
         it_transaction_type = findViewById(R.id.it_transaction_type);
         it_transaction_notes = findViewById(R.id.it_transaction_notes);
-        gv_transaction_payment_method = findViewById(R.id.gv_transaction_payment_method);
+        rv_transaction_payment_method = findViewById(R.id.rv_transaction_payment_method);
         ly_paid_status_add_edit = findViewById(R.id.ly_paid_status_add_edit);
         tv_paid_status_add_edit = findViewById(R.id.tv_paid_status_add_edit);
 
         unixTime = System.currentTimeMillis() / 1000;
 
-        btn_cancel_transaction.setOnClickListener( e -> {
-            Intent intent = new Intent(AddEditIncomeExpenseActivity.this, statisticsActivity.class);
-            startActivity(intent);
+        btn_cancel_transaction.setOnClickListener(e -> {
+            finish();
+            /*Intent intent = new Intent(AddEditIncomeExpenseActivity.this, statisticsActivity.class);
+            startActivity(intent);*/
         });
 
-        btn_transaction_bookmark.setOnClickListener( e-> {
-            if (Marked){
+        btn_transaction_bookmark.setOnClickListener(e -> {
+            if (Marked) {
                 Marked = false;
                 btn_transaction_bookmark.setBackground(ContextCompat.getDrawable(this, R.drawable.ic_action_bookmark_not_added));
             } else {
@@ -120,12 +145,11 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         transaction_title = intent.getStringExtra("Transaction_Title");
         selected_transaction_id = intent.getStringExtra("Selected_Transaction_Id");
 
-        paymentmethodList.clear();
+        paymentMethodList = Settings.stringToArray(settings.getPaymentMethodList());
 
-        paymentmethodList.add("Bank");
-        paymentmethodList.add("Cash");
-        paymentmethodList.add("Other");
-        paymentmethodList.add("Show More"); // this is to add more payment method's
+        if (!paymentMethodList.contains("Show More")){
+            paymentMethodList.add("Show More");
+        }
 
         if (transaction_title.equals("Expense")){
             it_transaction_amount.setText("-");
@@ -167,11 +191,11 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
             }
 
 
-            Log.i("AEIEA","paymentmethodList.size: " + paymentmethodList.size());
+            Log.i("AEIEA","paymentmethodList.size: " + paymentMethodList.size());
             Log.i("AEIEA","transaction: " + transaction.print());
-            for (int i = 0; i < paymentmethodList.size(); i++){
+            for (int i = 0; i < paymentMethodList.size(); i++){
                 Log.i("for_AEIEA","for loop pos: " + i);
-                if (transaction.getPayment_method().equals(paymentmethodList.get(i))){
+                if (transaction.getPayment_method().equals(paymentMethodList.get(i))){
                     position = i;
                 }
             }
@@ -182,24 +206,60 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
 
         tv_transaction_title.setText(Mode + " " + transaction_title);
 
-        ArrayList<String> array = new ArrayList<>();
-
-        array.add("allowance");
-        array.add("salary");
-        array.add("mortgage");
-        array.add("transport");
-        array.add("shopping");
-        array.add("subscription");
+        ArrayList<String> array = Settings.stringToArray(settings.type_list);
 
         ArrayAdapter<String> adapterType = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, array);
 
         it_transaction_type.setAdapter(adapterType);
 
-        PamentMethodAdapter adapter = new PamentMethodAdapter(this,paymentmethodList);
-        adapter.setSelectedPosition(position);
-        gv_transaction_payment_method.setAdapter(adapter);
+        //replase with FlexboxLayoutManager  // https://chatgpt.com/c/69931eba-71bc-832b-9cf0-aaa63e245a68
 
-        gv_transaction_payment_method.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
+
+        FlexboxLayoutManager flexboxLayoutManager = new FlexboxLayoutManager(this);
+
+        // Wrap items to next line
+        flexboxLayoutManager.setFlexWrap(FlexWrap.WRAP);
+
+        // Horizontal direction
+        flexboxLayoutManager.setFlexDirection(FlexDirection.ROW);
+
+        // Align items nicely
+        flexboxLayoutManager.setJustifyContent(JustifyContent.FLEX_START);
+
+
+        /*layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (position == paymentmethodList.size() - 1) {
+                    return 2; // full width
+                }
+                return 1;
+            }
+        });*/
+        //PaymentMethodAdapter adapter = new PaymentMethodAdapter(this, paymentMethodList, position -> {paymentMethod = paymentMethodList.get(position);});
+
+        adapter = new PaymentMethodAdapter(this, paymentMethodList, new PaymentMethodAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                paymentMethod = paymentMethodList.get(position);
+            }
+
+            @Override
+            public void onShowMoreClick(int currentSelectedPosition) {
+                Intent intent = new Intent(AddEditIncomeExpenseActivity.this, AddPaymentMethodActivity.class);
+
+                intent.putExtra("SELECTED_POS", currentSelectedPosition);
+
+                addPaymentLauncher.launch(intent);
+            }
+        });
+
+        rv_transaction_payment_method.setLayoutManager(flexboxLayoutManager);
+
+        rv_transaction_payment_method.setAdapter(adapter);
+
+        /*rv_transaction_payment_method.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             View previousSelectedView = null;
 
             @Override
@@ -219,7 +279,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
 
 
             }
-        });
+        });*/
 
         //ly_transaction_date.setOnClickListener( e->{openDateDialog();});
         tv_transaction_date_picker.setOnClickListener( e-> {
@@ -284,7 +344,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         Minutes = Integer.parseInt(minutes.format(date));
     }
     private boolean saveTransaction() throws InterruptedException {
-        if (paymentMethod.isEmpty() && Objects.requireNonNull(it_transaction_name.getText()).toString().isEmpty()){
+        if (paymentMethod.isEmpty() || Objects.requireNonNull(it_transaction_name.getText()).toString().isEmpty()){
             Toast.makeText(this, "please select a paymentMethod or type", Toast.LENGTH_SHORT).show();
             return false;
         } else {
@@ -297,12 +357,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
                 Intent intent1 = new Intent(this, statisticsActivity.class);
                 startActivity(intent1);
 
-                db.insertTransaction(name,unixTime,amount,type,notes,paymentMethod,Paid, Marked);
-
-                //db.insertTransactionLocal(99,user.getId(),name,unixTime,amount,type,notes,paymentMethod,Paid, Marked);
-
-                //Intent intent1 = new Intent(AddEditIncomeExpenseActivity.this, statisticsActivity.class);
-                //startActivity(intent1);
+                db.insertTransaction(name,unixTime,amount,type,notes,paymentMethod,Paid,Marked);
             } else {
                 String name = it_transaction_name.getText().toString();
                 Double amount = Double.valueOf(it_transaction_amount.getText().toString());
@@ -436,5 +491,10 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         //Log.i("AEIEA","Hours: " + Hours + " Minutes: " + Minutes);
 
         timePickerDialog.show();
+    }
+
+    public void openAddPaymentMethod() {
+        Intent intent = new Intent(this, AddPaymentMethodActivity.class);
+        addPaymentLauncher.launch(intent);
     }
 }

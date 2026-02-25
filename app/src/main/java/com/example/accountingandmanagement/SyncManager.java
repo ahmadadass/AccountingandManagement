@@ -7,7 +7,6 @@ public class SyncManager {
 
     private static SyncManager instance;
     private Context context;
-    DatabaseHelper db = new DatabaseHelper(context);
 
     private SyncManager(Context context) {
         this.context = context.getApplicationContext();
@@ -21,6 +20,7 @@ public class SyncManager {
     }
 
     public void syncPendingActions() {
+        DatabaseHelper db = new DatabaseHelper(context);
         db.syncPendingActions();
         Log.d("SyncManager", "Syncing pending actions...");
     }

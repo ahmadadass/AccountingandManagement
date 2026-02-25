@@ -2,18 +2,13 @@ package com.example.accountingandmanagement;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
@@ -39,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
     public static String token;
     private ApiService apiService;
     public boolean wifiConnected = false;
-    private NetworkListener networkListener;
 
 
     // In your Activity or Service
@@ -69,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
 
         et_username.setText("testuser");
         et_password.setText("123");
-
-        networkListener = new NetworkListener();
-        networkListener.start(this);
 
         btn_login.setOnClickListener( e ->{
             String username = et_username.getText().toString();

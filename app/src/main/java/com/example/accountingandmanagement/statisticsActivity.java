@@ -8,7 +8,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +32,7 @@ import java.util.List;
 
 public class statisticsActivity extends AppCompatActivity {
 
+    public static statisticsActivity instance;
     Double IncomeSum = 0.0;
     Double ExpenseSum = 0.0;
     Double TotalSum = 0.0;
@@ -36,6 +40,14 @@ public class statisticsActivity extends AppCompatActivity {
     public Button btn_filter_left;
     public Button btn_filter_right;
     public static String filterType;
+    ListView lv_transactions;
+    TextView tv_income_amount;
+    TextView tv_expense_amount;
+    TextView tv_sum_amount;
+    public TransactionAdapter adapter;
+    public ArrayList<Transaction> transactions = new ArrayList<>();
+    private NetworkListener networkListener;
+    public DatabaseHelper db;
 
     @Override
     @SuppressLint({"MissingInflatedId", "LocalSuppress"})
@@ -43,15 +55,15 @@ public class statisticsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistics);
 
-        ListView lv_transactions = findViewById(R.id.lv_transactions);
+        lv_transactions = findViewById(R.id.lv_transactions);
         RecyclerView rv_filter = findViewById(R.id.rv_filter);
         Button btn_add_income = findViewById(R.id.btn_add_income);
         Button btn_add_expense = findViewById(R.id.btn_add_expense);
         Button btn_search = findViewById(R.id.btn_search);
         Button btn_menu = findViewById(R.id.btn_menu);
-        TextView tv_income_amount = findViewById(R.id.tv_income_amount);
-        TextView tv_expense_amount = findViewById(R.id.tv_expense_amount);
-        TextView tv_sum_amount = findViewById(R.id.tv_sum_amount);
+        tv_income_amount = findViewById(R.id.tv_income_amount);
+        tv_expense_amount = findViewById(R.id.tv_expense_amount);
+        tv_sum_amount = findViewById(R.id.tv_sum_amount);
         tv_filter = findViewById(R.id.tv_filter);
         btn_filter_left = findViewById(R.id.btn_filter_left);
         btn_filter_right = findViewById(R.id.btn_filter_right);
@@ -67,7 +79,10 @@ public class statisticsActivity extends AppCompatActivity {
         LinearLayout ly_customer_support = findViewById(R.id.ly_customer_support);
         LinearLayout ly_logout = findViewById(R.id.ly_logout);
 
-        DatabaseHelper db = new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
+
+        networkListener = new NetworkListener();
+        networkListener.start(this);
 
         btn_add_income.setOnClickListener( e -> {
             Intent intent = new Intent(statisticsActivity.this, AddEditIncomeExpenseActivity.class);
@@ -120,8 +135,9 @@ public class statisticsActivity extends AppCompatActivity {
             Intent intent = new Intent(statisticsActivity.this, MainActivity.class);
             startActivity(intent);
         });
+        /*
 
-        List<Transaction> transactions = db.getAllTransactions();
+        ArrayList<Transaction> transactions = db.getAllTransactions();
 
         for (Transaction transaction : transactions) {
             Log.i("SA",transaction.print());
@@ -144,12 +160,44 @@ public class statisticsActivity extends AppCompatActivity {
         tv_expense_amount.setText("₪ " + ExpenseSum.toString());
         tv_sum_amount.setText("₪ " + TotalSum.toString());
 
-        //db.insertSettings(true,false,false,true); // TODO Add settings in ui
         db.setSettings();
 
         TransactionAdapter adapter = new TransactionAdapter(statisticsActivity.this, transactions);
+        lv_transactions.setAdapter(adapter);*/
+
+        transactions.clear();
+        transactions.addAll(db.getAllTransactions());
+
+        TotalSum = 0.0;
+        IncomeSum = 0.0;
+        ExpenseSum = 0.0;
+        for (Transaction transaction : transactions) {
+            Log.i("SA",transaction.print());
+            if (transaction.getPaidStatus()) {
+                TotalSum += transaction.getAmount();
+                if (transaction.getAmount() > 0) {
+                    IncomeSum += transaction.getAmount();
+                } else {
+                    ExpenseSum += transaction.getAmount();
+                }
+            }
+        }
+
+        long unixTime = System.currentTimeMillis() / 1000;
+
+        Log.i("sA","time:" + unixTime);
+        //Toast.makeText(this, "Time: "+Transaction.unixToString(unixTime), Toast.LENGTH_SHORT).show();
+
+        tv_income_amount.setText("₪ " + IncomeSum.toString());
+        tv_expense_amount.setText("₪ " + ExpenseSum.toString());
+        tv_sum_amount.setText("₪ " + TotalSum.toString());
+
+        db.setSettings();
+
+        adapter = new TransactionAdapter(statisticsActivity.this, transactions);
         lv_transactions.setAdapter(adapter);
 
+        //setMainListView();
         lv_transactions.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -159,6 +207,10 @@ public class statisticsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
+
+
 /*      TODO do wen ready :) don't force your self
         filterType = "time";
         FilterAdapter filterAdapter = new FilterAdapter(this,setFilterData(filterType),tv_filter,btn_filter_left,btn_filter_right);
@@ -167,6 +219,58 @@ public class statisticsActivity extends AppCompatActivity {
         rv_filter.setItemAnimator(new DefaultItemAnimator());
         rv_filter.addItemDecoration(new DividerItemDecoration(this,LinearLayoutManager.HORIZONTAL));
         rv_filter.setAdapter(filterAdapter);*/
+
+    }
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("Broadcast", "UPDATE_LIST received");
+            runOnUiThread(() -> setMainListView());
+        }
+    };
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(receiver, new IntentFilter("UPDATE_LIST"));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
+    }
+
+    public void setMainListView(){
+        transactions.clear();
+        transactions.addAll(db.getAllTransactions());
+
+        TotalSum = 0.0;
+        IncomeSum = 0.0;
+        ExpenseSum = 0.0;
+        for (Transaction transaction : transactions) {
+            Log.i("SA",transaction.print());
+            if (transaction.getPaidStatus()) {
+                TotalSum += transaction.getAmount();
+                if (transaction.getAmount() > 0) {
+                    IncomeSum += transaction.getAmount();
+                } else {
+                    ExpenseSum += transaction.getAmount();
+                }
+            }
+        }
+
+        long unixTime = System.currentTimeMillis() / 1000;
+
+        Log.i("sA","time:" + unixTime);
+        //Toast.makeText(this, "Time: "+Transaction.unixToString(unixTime), Toast.LENGTH_SHORT).show();
+
+        tv_income_amount.setText("₪ " + IncomeSum.toString());
+        tv_expense_amount.setText("₪ " + ExpenseSum.toString());
+        tv_sum_amount.setText("₪ " + TotalSum.toString());
+
+        db.setSettings();
+
+        adapter.notifyDataSetChanged();
 
     }
     public static ArrayList<String> setFilterData(String type){

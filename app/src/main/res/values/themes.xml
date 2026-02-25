@@ -6,10 +6,10 @@
     </style>
 
     <drawable name="diback">@android:drawable/dialog_holo_light_frame</drawable>
-    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimary">#4F61C1</color>
     <color name="colorBackground">#FFFFFF</color>
     <color name="colorBackgroundLite">#FFFFFF</color>
-    <color name="colorButton">#939393</color>
+    <color name="colorButton">#B5B3B3</color>
     <color name="colorText">#000000</color>
     <color name="colorTinyText">#7C7C7C</color>
     <color name="colorPMItem">#C3C3C3</color>

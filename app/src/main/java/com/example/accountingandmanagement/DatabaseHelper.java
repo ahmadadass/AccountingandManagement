@@ -34,10 +34,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "accountingManager.db";
-    public static final int DATABASE_VERSION = 8;
+    public static final int DATABASE_VERSION = 10;
 
     Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl("https://money-management-0301.netlify.app/") // <--- YOUR LINK HERE
+            .baseUrl("https://money-management-0301.netlify.app/") // this is the middle man with the database 🫡
             .addConverterFactory(GsonConverterFactory.create())
             .build();
     private ApiService apiService = retrofit.create(ApiService.class);
@@ -65,6 +65,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_SETTINGS_TYPE_VISIVILITY = "type_visibility";
     public static final String COL_SETTINGS_NOTES_VISIVILITY = "notes_visibility";
     public static final String COL_SETTINGS_TIME_VISIVILITY = "time_visibility";
+    public static final String COL_SETTINGS_PAYMENT_METHOD_LIST = "payment_method_list";
+    public static final String COL_SETTINGS_TYPE_LIST = "type_list";
     public static final String COL_SETTINGS_USER_ID = "user_id";
     public static final String COL_USER_ID = "id";
     public static final String COL_USER_NAME = "username";
@@ -106,7 +108,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_SETTINGS_TYPE_VISIVILITY + " INTEGER, " +
                 COL_SETTINGS_NOTES_VISIVILITY + " INTEGER, " +
                 COL_SETTINGS_TIME_VISIVILITY + " INTEGER, " +
-                COL_SETTINGS_USER_ID + " INTEGER);");
+                COL_SETTINGS_USER_ID + " INTEGER, " +
+                COL_SETTINGS_PAYMENT_METHOD_LIST + " TEXT, " +
+                COL_SETTINGS_TYPE_LIST + " TEXT);");
 
         db.execSQL("CREATE TABLE `" + TABLE_USER + "` (" +
                 COL_USER_ID + " INTEGER PRIMARY KEY, " +
@@ -114,7 +118,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_USER_PASSWORD + " TEXT, " +
                 COL_USER_SUBSCRIPTION + " TEXT)");
 
-        db.execSQL("CREATE TABLE `" + TABLE_OFFLINE_ACTIONS + "` (" +
+        db.execSQL("CREATE TABLE IF NOT EXISTS `" + TABLE_OFFLINE_ACTIONS + "` (" +
                 COL_ACTIONS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_ACTIONS_TABLE_NAME + " TEXT NOT NULL," +
                 COL_ACTIONS_ACTION_TYPE + " TEXT NOT NULL," +
@@ -129,7 +133,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTION);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_SETTINGS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_OFFLINE_ACTIONS);
+        //db.execSQL("DROP TABLE IF EXISTS " + TABLE_OFFLINE_ACTIONS);
         onCreate(db);
     }
 
@@ -138,12 +142,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 json,
                 MediaType.parse("application/json")
         );
-
+        Log.i("SYNCING-ACTION","Action id: " + ActionId + ", json: " + json);
         apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
             @Override
             public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
 
                 if (response.isSuccessful()) {
+                    Log.i("ACTION-SYNCED","Action id: " + ActionId);
                     setAsSyncedOfflineAction(ActionId);
                 } else {
                     // keep unsynced
@@ -182,11 +187,12 @@ private void syncNext() {
 
         ArrayList<Action> actions = getOfflineActions();
 
+        if (actions == null || actions.size() == 0) return;
         for (Action action : actions) {
             syncSingleAction(action.getId(),action.getLocal_id(), action.getPaload());
         }
+        //TODO make database update from clued 
     }
-
     public void deleteDatabase(User user, ArrayList<Transaction> transactions, Settings settings){
         SQLiteDatabase db = this.getWritableDatabase();
         onUpgrade(db,DATABASE_VERSION-1,DATABASE_VERSION);
@@ -202,7 +208,7 @@ private void syncNext() {
             insertTransactionLocal(bb.array(),transaction.getUserId(),transaction.getName(),transaction.getTime(),transaction.getAmount(),transaction.getType(),transaction.getNotes(),transaction.getPayment_method(),transaction.getPaidStatus(),transaction.getMarkedStatus());
         }
         if (settings != null)
-            insertSettings(settings.getNameV(),settings.getTypeV(),settings.getNotesV(),settings.getTimeV(),settings.getUserId());
+            insertSettings(settings.getNameV(),settings.getTypeV(),settings.getNotesV(),settings.getTimeV(),settings.getUserId(),settings.getPaymentMethodList(),settings.getTypeList());
     }
     boolean deleted = false;
     public boolean deleteTransaction(String uuid) {
@@ -368,10 +374,10 @@ private void syncNext() {
         values.put(COL_TRANSACTION_BOOK_MARK, Marked ? 1 : 0);
         return db.insert(TABLE_TRANSACTION, null, values);  // returns the new user's ID
     }
-    public long insertSettings(boolean nameVisibility, boolean typeVisibility, boolean notesVisibility, boolean timeVisibility, int user_id) {
+    public long insertSettings(boolean nameVisibility, boolean typeVisibility, boolean notesVisibility, boolean timeVisibility, int user_id, String paymentMethodList, String typeList) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        db.delete(TABLE_SETTINGS, "user_id=?", new String[]{String.valueOf(user_id)});
+        //db.delete(TABLE_SETTINGS, "user_id=?", new String[]{String.valueOf(user_id)});
 
         ContentValues values = new ContentValues();
         values.put(COL_SETTINGS_USER_ID, user_id);
@@ -379,6 +385,8 @@ private void syncNext() {
         values.put(COL_SETTINGS_TYPE_VISIVILITY, typeVisibility ? 1 : 0);
         values.put(COL_SETTINGS_NOTES_VISIVILITY, notesVisibility ? 1 : 0);
         values.put(COL_SETTINGS_TIME_VISIVILITY, timeVisibility ? 1 : 0);
+        values.put(COL_SETTINGS_PAYMENT_METHOD_LIST, paymentMethodList);
+        values.put(COL_SETTINGS_TYPE_LIST, typeList);
 
         return db.insert(TABLE_SETTINGS, null, values);
     }
@@ -418,9 +426,6 @@ private void syncNext() {
                 json,
                 MediaType.parse("application/json")
         );
-        ProgressDialog pd = new ProgressDialog(Contextt);
-        pd.setMessage("Connecting to database...");
-        pd.show();
 
         edited = Boolean.parseBoolean(null);
 
@@ -430,12 +435,10 @@ private void syncNext() {
             @Override
             public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    pd.dismiss();
                     Toast.makeText(Contextt, "Successful transaction modification", Toast.LENGTH_SHORT).show();
 
                     edited = true;
                 } else {
-                    pd.dismiss();
                     edited = false;
                     Toast.makeText(Contextt, "Error editing transaction", Toast.LENGTH_SHORT).show();
                     Log.e("API", "Server returned error: " + response.message());
@@ -529,6 +532,63 @@ private void syncNext() {
             if (cursor != null && !cursor.isClosed()) cursor.close();
         }
         return transactions;
+    }
+    public void setDataFromCloud() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Map<String, Object> root = new HashMap<>();
+        root.put("action", "get_data");
+        root.put("token", token);
+
+        String json = new Gson().toJson(root);
+
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
+            @Override
+            public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ArrayList<Transaction> transactions = response.body().transactions;
+                    Settings settings = response.body().settings;
+
+                    db.delete(TABLE_TRANSACTION,"1 = 1",null);
+                    db.delete(TABLE_SETTINGS,"1 = 1",null);
+
+                    for (Transaction transaction:transactions){
+                        UUID uuid = UUID.fromString(transaction.getId());
+
+                        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+                        bb.putLong(uuid.getMostSignificantBits());
+                        bb.putLong(uuid.getLeastSignificantBits());
+
+                        insertTransactionLocal(bb.array(),transaction.getUserId(),transaction.getName(),transaction.getTime(),transaction.getAmount(),transaction.getType(),transaction.getNotes(),transaction.getPayment_method(),transaction.getPaidStatus(),transaction.getMarkedStatus());
+                    }
+                    if (settings != null)
+                        insertSettings(settings.getNameV(),settings.getTypeV(),settings.getNotesV(),settings.getTimeV(),settings.getUserId(),settings.getPaymentMethodList(),settings.getTypeList());
+
+
+                    Log.d("Broadcast", "Sending UPDATE_LIST");
+                    Intent intent = new Intent("UPDATE_LIST");
+                    intent.setPackage(Contextt.getPackageName());
+                    Contextt.sendBroadcast(intent);
+                } else {
+                    Log.v("apiService onResponse message:", response.message());
+                    try {
+                        String errorResponse = response.errorBody() != null ? response.errorBody().string() : "No error body available";
+                        Log.e("API", "Server returned error: " + errorResponse);
+                    } catch (IOException e) {
+                        Log.e("API", "Error reading the error body: " + e.getMessage());
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<DataResponse> call, Throwable t) {
+                Log.e("API", "Error: " + t.getMessage());
+            }
+        });
     }
     public ArrayList<Transaction> getAllTransactionsWhereClause(String whereClause) {
         ArrayList<Transaction> transactions = new ArrayList<>();
@@ -624,7 +684,12 @@ private void syncNext() {
         return transaction;
     }
     public void setSettings() {
-        SQLiteDatabase db = this.getReadableDatabase();
+
+        Settings settings = getSettings();
+
+        TransactionAdapter.settings = settings;
+
+        /*SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
         try {
@@ -644,7 +709,7 @@ private void syncNext() {
         } finally {
             if (cursor != null && !cursor.isClosed()) cursor.close();
             //if (db != null && db.isOpen()) db.close();
-        }
+        }*/
     }
     public Settings getSettings() {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -661,8 +726,10 @@ private void syncNext() {
                     boolean typeVisibility = cursor.getInt(cursor.getColumnIndexOrThrow(COL_SETTINGS_TYPE_VISIVILITY)) == 1;
                     boolean notesVisibility = cursor.getInt(cursor.getColumnIndexOrThrow(COL_SETTINGS_NOTES_VISIVILITY)) == 1;
                     boolean timeVisibility = cursor.getInt((cursor.getColumnIndexOrThrow(COL_SETTINGS_TIME_VISIVILITY))) == 1;
+                    String paymentPethodList = cursor.getString((cursor.getColumnIndexOrThrow(COL_SETTINGS_PAYMENT_METHOD_LIST)));
+                    String typeList = cursor.getString((cursor.getColumnIndexOrThrow(COL_SETTINGS_TYPE_LIST)));
 
-                    setting = new Settings(id,user_id,nameVisibility,typeVisibility,notesVisibility,timeVisibility);
+                    setting = new Settings(id,user_id,nameVisibility,typeVisibility,notesVisibility,timeVisibility,paymentPethodList,typeList);
                 } while (cursor.moveToNext());
 
             }
@@ -672,17 +739,61 @@ private void syncNext() {
         }
         return setting;
     }
-    public boolean updateSettings(boolean nameVisibility, boolean typeVisibility, boolean notesVisibility, boolean timeVisibility, int user_id) {
+    /*public void setSettingsFromCloud() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Map<String, Object> root = new HashMap<>();
+        root.put("action", "get_settings");
+        root.put("token", token);
+
+        String json = new Gson().toJson(root);
+
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
+            @Override
+            public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Settings settings = response.body().settings;
+
+                    db.delete(TABLE_SETTINGS,"1 = 1",null);
+
+                    insertSettings(settings.getNameV(),settings.getTypeV(),settings.getNotesV(),settings.getTimeV(),user.getId());
+
+                } else {
+                    Log.v("apiService onResponse message:", response.message());
+                    try {
+                        String errorResponse = response.errorBody() != null ? response.errorBody().string() : "No error body available";
+                        Log.e("API", "Server returned error: " + errorResponse);
+                    } catch (IOException e) {
+                        Log.e("API", "Error reading the error body: " + e.getMessage());
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<DataResponse> call, Throwable t) {
+                added = false;
+                Log.e("API", "Error: " + t.getMessage());
+            }
+        });
+    }*/
+    public boolean updateSettings(boolean nameVisibility, boolean typeVisibility, boolean notesVisibility, boolean timeVisibility, int user_id, String paymetMethodList, String typeList) {
+        SQLiteDatabase db = this.getWritableDatabase();
         Map<String, Object> root = new HashMap<>();
         root.put("action", "update_settings");
         root.put("token", token);
 
         Map<String, String> data = new HashMap<>();
-        data.put("user_id", String.valueOf(user_id));
-        data.put("name_visibility", String.valueOf(nameVisibility ? 1 : 0));
-        data.put("type_visibility", String.valueOf(typeVisibility ? 1 : 0));
-        data.put("notes_visibility", String.valueOf(notesVisibility ? 1 : 0));
-        data.put("time_visibility", String.valueOf(timeVisibility ? 1 : 0));
+        data.put(COL_SETTINGS_USER_ID, String.valueOf(user_id));
+        data.put(COL_SETTINGS_NAME_VISIVILITY, String.valueOf(nameVisibility ? 1 : 0));
+        data.put(COL_SETTINGS_TYPE_VISIVILITY, String.valueOf(typeVisibility ? 1 : 0));
+        data.put(COL_SETTINGS_NOTES_VISIVILITY, String.valueOf(notesVisibility ? 1 : 0));
+        data.put(COL_SETTINGS_TIME_VISIVILITY, String.valueOf(timeVisibility ? 1 : 0));
+        data.put(COL_SETTINGS_PAYMENT_METHOD_LIST, paymetMethodList);
+        data.put(COL_SETTINGS_TYPE_LIST, typeList);
 
         root.put("data", data);
 
@@ -695,7 +806,9 @@ private void syncNext() {
 
         edited = Boolean.parseBoolean(null);
 
-        insertSettings(nameVisibility, typeVisibility, notesVisibility, timeVisibility,user.getId());
+        db.delete(TABLE_SETTINGS,"1 = 1",null);
+
+        insertSettings(nameVisibility, typeVisibility, notesVisibility, timeVisibility, user.getId(), paymetMethodList, typeList);
         setSettings();
 
         apiService.SendAndGetData(body).enqueue(new Callback<DataResponse>() {
@@ -832,7 +945,7 @@ private void syncNext() {
     public ArrayList<Action> getOfflineActions(){
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
-        ArrayList<Action> Actions = null;
+        ArrayList<Action> Actions = new ArrayList<>();
 
         try {
             cursor = db.rawQuery(
@@ -867,6 +980,7 @@ private void syncNext() {
         cursor.put(COL_ACTIONS_SYNCED, 1);
 
         db.update(TABLE_OFFLINE_ACTIONS, cursor, COL_ACTIONS_ID + "=?", new String[]{String.valueOf(Id)});
+        setDataFromCloud(); // it is inefficient takes 3 - 5 sends
     }
     public boolean deleteSetting(int id) throws InterruptedException {
         Map<String, Object> root = new HashMap<>();
