@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         //if (user != null) db.deleteUserPassword(user.getId());
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://money-management-0301.netlify.app/") // <--- YOUR LINK HERE
+                .baseUrl("https://money-management-0301.netlify.app/") // <--- database serves
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -97,7 +97,9 @@ public class MainActivity extends AppCompatActivity {
                         user = response.body().user;
                         ArrayList<Transaction> transactions = response.body().transactions;
                         Settings userSettings = response.body().settings;
-                        db.deleteDatabase(user, transactions, userSettings);
+                        ArrayList<ProductData> productsData = response.body().products_data;
+                        ArrayList<Product> products = response.body().products;
+                        db.deleteDatabase(user, transactions, userSettings, productsData, products);
                         token = response.body().token;
                         Log.i("API", "Token: " + token);
                         Intent intent = new Intent(MainActivity.this, statisticsActivity.class);

@@ -8,6 +8,8 @@ public class DataResponse {
     public User user;
     public ArrayList<Transaction> transactions;
     public Settings settings;
+    public ArrayList<ProductData> products_data;
+    public ArrayList<Product> products;
     public String error; // To catch login errors
     private ResultSetHeader ResultSetHeader;
 

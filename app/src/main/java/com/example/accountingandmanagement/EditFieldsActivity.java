@@ -70,15 +70,13 @@ public class EditFieldsActivity extends AppCompatActivity {
         btn_save_fields.setOnClickListener( e-> {
             //db.insertSettings(s_name.isChecked(),s_type.isChecked(),s_notes.isChecked(),s_time.isChecked(),user.getId());
 
-            Intent intent = new Intent(EditFieldsActivity.this,statisticsActivity.class);
-            startActivity(intent);
+            finish();
 
             db.updateSettings(s_name.isChecked(),s_type.isChecked(),s_notes.isChecked(),s_time.isChecked(),user.getId(),settings.getPaymentMethodList(),settings.getTypeList());
         });
 
         btn_back_edit_fields.setOnClickListener( e-> {
-            Intent intent = new Intent(EditFieldsActivity.this,statisticsActivity.class);
-            startActivity(intent);
+            finish();
         });
     }
 }

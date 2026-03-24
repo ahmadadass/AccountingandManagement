@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -20,10 +21,6 @@ public class Transaction {
     int paid;
     int bookmark;
 
-    public Transaction(){
-
-    }
-
     public Transaction(String Id , int userId, String Name, Long Time, Double Amount, String Type, String Notes, String PaymentMethod, int Paid, int Marked){
         this.id = Id;
         this.user_id = userId;
@@ -36,7 +33,6 @@ public class Transaction {
         this.paid = Paid;
         this.bookmark = Marked;
     }
-
     public String getId(){
         UUID uuid = UUID.fromString(this.id);
 
@@ -73,7 +69,6 @@ public class Transaction {
     public boolean getPaidStatus(){
         return this.paid == 1;
     }
-
     public void setPaidStatus(int Paid){
         this.paid = Paid;
     }
@@ -107,46 +102,6 @@ public class Transaction {
         return sdf.format(date);
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setUserId(int user_id) {
-        this.user_id = user_id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setTime(Long time) {
-        this.time = time;
-    }
-
-    public void setAmount(Double amount) {
-        this.amount = amount;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public void setPayment_method(String payment_method) {
-        this.payment_method = payment_method;
-    }
-
-    public void setPaid(int paid) {
-        this.paid = paid;
-    }
-
-    public void setMarkedStatus(int bookmark) {
-        this.bookmark = bookmark;
-    }
-
     public static UUID bytesToUUID(byte[] bytes) {
         ByteBuffer bb = ByteBuffer.wrap(bytes);
         long mostSigBits = bb.getLong();
@@ -159,5 +114,32 @@ public class Transaction {
         bb.putLong(uuid.getMostSignificantBits());
         bb.putLong(uuid.getLeastSignificantBits());
         return bb.array();
+    }
+
+    public static String arrayProductToString(ArrayList<Product> array) {
+        if (array == null || array.size() == 0) return "";
+
+        StringBuilder text = new StringBuilder();
+
+        for (int i = 0; i < array.size(); i++) {
+            text.append(array.get(i).print());
+            if (i < array.size() - 1) {
+                text.append(","); // separator
+            }
+        }
+
+        return text.toString();
+    }
+    public static ArrayList<Product> stringToProductArray(String text) {
+        if (text == null || text.isEmpty()) return new ArrayList<>();
+
+        String[] parts = text.split(",");
+        ArrayList<Product> array = new ArrayList<>();
+
+        for (int i = 0; i < parts.length; i++) {
+            array.add(Product.jsonToProduct(parts[i]));
+        }
+
+        return array;
     }
 }

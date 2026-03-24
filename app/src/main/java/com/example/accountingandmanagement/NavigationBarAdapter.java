@@ -37,7 +37,7 @@ public class NavigationBarAdapter extends BaseAdapter {
         this.context = context;
         this.navigationBarItemList = navigationBarItemList;
         this.inflater = LayoutInflater.from(context);
-        db = new DatabaseHelper(context); // TODO make fun's for database 
+        db = new DatabaseHelper(context);
     }
 
     static class ViewHolder {
@@ -92,7 +92,6 @@ public class NavigationBarAdapter extends BaseAdapter {
             holder.moreView.setOnClickListener(v -> {
                 PopupMenu popupMenu = new PopupMenu(context, holder.moreView);
 
-
                 for(String action:navigationBarItemList.get(position).getArrayMoreActions()){
                     popupMenu.getMenu().add(action);
                 }
@@ -138,16 +137,16 @@ public class NavigationBarAdapter extends BaseAdapter {
     }
     public void showCustomDialog(String title, String editTextText) {
         final Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.add_payment_method_dialog);
+        dialog.setContentView(R.layout.edit_text_save_cancel_dialog);
 
         // make background transparent
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
 
         // Access views within the dialog
-        TextView tv_add_payment_method_title = dialog.findViewById(R.id.tv_add_payment_method_title);
-        EditText et_add_payment_method_text = dialog.findViewById(R.id.et_add_payment_method_text);
-        Button btn_cancel_add_payment_method = dialog.findViewById(R.id.btn_cancel_payment_method);
-        Button btn_save_add_payment_method = dialog.findViewById(R.id.btn_save_payment_method);
+        TextView tv_add_payment_method_title = dialog.findViewById(R.id.tv_title_dialog);
+        EditText et_add_payment_method_text = dialog.findViewById(R.id.et_text_dialog);
+        Button btn_cancel_add_payment_method = dialog.findViewById(R.id.btn_cancel_dialog);
+        Button btn_save_add_payment_method = dialog.findViewById(R.id.btn_save_dialog);
 
         tv_add_payment_method_title.setText(title);
         if (editTextText != null || !editTextText.equals("")) {

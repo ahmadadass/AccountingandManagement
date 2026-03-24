@@ -80,6 +80,10 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
+
+                    Intent data = result.getData();
+
+
                     paymentMethodList.clear();
 
                     // 2. Fetch the newly updated list from your settings/database
@@ -90,9 +94,18 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
                         paymentMethodList.add("Show More");
                     }
 
-                    // 4. Tell the adapter the data has changed so the screen updates!
-                    if (adapter != null) {
-                        adapter.notifyDataSetChanged();
+                    if (data != null && adapter != null) {
+                        // Extract the position (-1 is the safety default)
+                        int returnedPos = data.getIntExtra("RETURN_POS", -1);
+
+                        // If a valid position was returned, tell the Adapter to select it!
+                        if (returnedPos != -1 && returnedPos < paymentMethodList.size()) {
+
+                            adapter.setSelectedPosition(returnedPos);
+
+                            // Don't forget to update your local variable so the database saves the right name!
+                            paymentMethod = paymentMethodList.get(returnedPos);
+                        }
                     }
                 }
             }
@@ -156,7 +169,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         }
 
         String Mode;
-        if (selected_transaction_id.equals("")){
+        if (selected_transaction_id == null || selected_transaction_id.isEmpty()){
 
             Mode = "Add";
             tv_transaction_date_picker.setText(Transaction.printDate(unixTime));
@@ -294,8 +307,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
         btn_save_transaction.setOnClickListener( e-> {
             try {
                 if (saveTransaction()){
-                    Intent intent3 = new Intent(AddEditIncomeExpenseActivity.this, statisticsActivity.class);
-                    startActivity(intent3);
+                    finish();
                 }
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
@@ -306,10 +318,16 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
             try {
                 if (saveTransaction()){
                     //restarts the activity
-                    Intent intent2 = new Intent(AddEditIncomeExpenseActivity.this, AddEditIncomeExpenseActivity.class);
+                    /*Intent intent2 = new Intent(AddEditIncomeExpenseActivity.this, AddEditIncomeExpenseActivity.class);
                     intent2.putExtra("Transaction_Title",tv_transaction_title.getText());
                     intent2.putExtra("Selected_Transaction_Id",0);
-                    startActivity(intent2);
+                    startActivity(intent2);*/
+
+                    /*Intent intent2 = getIntent();
+                    intent2.putExtra("Transaction_Title",tv_transaction_title.getText().toString());
+                    intent2.putExtra("Selected_Transaction_Id","0");
+                    recreate();*/
+                    resetForm();
                 }
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
@@ -354,9 +372,6 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
                 String type = it_transaction_type.getText().toString();
                 String notes = it_transaction_notes.getText().toString();
 
-                Intent intent1 = new Intent(this, statisticsActivity.class);
-                startActivity(intent1);
-
                 db.insertTransaction(name,unixTime,amount,type,notes,paymentMethod,Paid,Marked);
             } else {
                 String name = it_transaction_name.getText().toString();
@@ -364,10 +379,7 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
                 String type = it_transaction_type.getText().toString();
                 String notes = it_transaction_notes.getText().toString();
 
-                Intent intent1 = new Intent(this, statisticsActivity.class);
-                startActivity(intent1);
-
-                db.editTransaction(selected_transaction_id,name,unixTime,amount,type,notes,paymentMethod,Paid,Marked);
+                db.updateTransaction(selected_transaction_id,name,unixTime,amount,type,notes,paymentMethod,Paid,Marked,null);
             }
             return true;
         }
@@ -492,7 +504,43 @@ public class AddEditIncomeExpenseActivity extends AppCompatActivity {
 
         timePickerDialog.show();
     }
+    private void resetForm() {
 
+        unixTime = System.currentTimeMillis() / 1000;
+
+        // reset text fields
+        it_transaction_name.setText("");
+        it_transaction_amount.setText("");
+        it_transaction_notes.setText("");
+        it_transaction_type.setText("");
+        it_transaction_type.dismissDropDown();
+
+        // reset payment method
+        paymentMethod = "";
+        adapter.setSelectedPosition(-1);
+
+        // reset paid status
+        Paid = true;
+        ly_paid_status_add_edit.setBackgroundResource(R.drawable.paid_back);
+        tv_paid_status_add_edit.setText("Paid");
+
+        // reset bookmark
+        Marked = false;
+        btn_transaction_bookmark.setBackground(
+                ContextCompat.getDrawable(this, R.drawable.ic_action_bookmark_not_added)
+        );
+
+        // reset date & time
+        tv_transaction_date_picker.setText(Transaction.printDate(unixTime));
+        tv_transaction_time_picker.setText(Transaction.printTime(unixTime));
+
+        setTimeValues(unixTime);
+
+        // reset amount sign for expense
+        if ("Expense".equals(transaction_title)) {
+            it_transaction_amount.setText("-");
+        }
+    }
     public void openAddPaymentMethod() {
         Intent intent = new Intent(this, AddPaymentMethodActivity.class);
         addPaymentLauncher.launch(intent);

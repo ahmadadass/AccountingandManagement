@@ -13,7 +13,6 @@ import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -27,7 +26,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.MissingResourceException;
 
 public class SearchActivity extends AppCompatActivity {
     Double IncomeSum = 0.0;
@@ -40,7 +38,7 @@ public class SearchActivity extends AppCompatActivity {
     List<Transaction> transactions;
     String searchValue = "";
     boolean Marked = false;
-    boolean Paid = true;
+    boolean Paid = false;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +46,30 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
 
         DatabaseHelper db = new DatabaseHelper(this);
+
+        int searchSettings = getIntent().getIntExtra("SEARCH_SETTINGS",0);
+        if (searchSettings != 0){
+            switch (searchSettings){
+                case 1:{
+                    Marked = false;
+                    Paid = true;
+                    break;
+                }
+                case 10:{
+                    Marked = true;
+                    Paid = false;
+                    break;
+                }
+                case 11:{
+                    Marked = true;
+                    Paid = true;
+                    break;
+                }
+                default: {
+
+                }
+            }
+        }
 
         ListView lv_transactions_search = findViewById(R.id.lv_transactions_search);
         tv_search_income_amount = findViewById(R.id.tv_search_income_amount);
@@ -62,13 +84,18 @@ public class SearchActivity extends AppCompatActivity {
         TextView tv_paid_status = findViewById(R.id.tv_paid_status);
 
         btn_cansel_search.setOnClickListener( e-> {
-            Intent intent1 = new Intent(SearchActivity.this, statisticsActivity.class);
-            startActivity(intent1);
+            finish();
         });
 
         btn_share_transactions.setOnClickListener( e-> {
             shareView(cl_search);
         });
+
+        if (Marked){
+            btn_search_bookmark.setBackground(ContextCompat.getDrawable(this, R.drawable.ic_action_bookmark));
+        } else {
+            btn_search_bookmark.setBackground(ContextCompat.getDrawable(this, R.drawable.ic_action_bookmark_not_added));
+        }
 
         btn_search_bookmark.setOnClickListener( e-> {
             if (Marked){
@@ -78,10 +105,18 @@ public class SearchActivity extends AppCompatActivity {
                 Marked = true;
                 btn_search_bookmark.setBackground(ContextCompat.getDrawable(this, R.drawable.ic_action_bookmark));
             }
-            List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0);
+            List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0,1);
             TransactionAdapter adapter = new TransactionAdapter(SearchActivity.this, transactions);
             lv_transactions_search.setAdapter(adapter);
         });
+
+        if (Paid){
+            tv_paid_status.setText("Paid");
+            btn_paid_status.setBackground(ContextCompat.getDrawable(this, R.drawable.paid_back));
+        } else {
+            tv_paid_status.setText("Unpaid");
+            btn_paid_status.setBackground(ContextCompat.getDrawable(this, R.drawable.not_paid_back));
+        }
 
         btn_paid_status.setOnClickListener( e-> {
             if (Paid){
@@ -93,13 +128,13 @@ public class SearchActivity extends AppCompatActivity {
                 tv_paid_status.setText("Paid");
                 btn_paid_status.setBackground(ContextCompat.getDrawable(this, R.drawable.paid_back));
             }
-            List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0);
+            List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0,1);
             TransactionAdapter adapter = new TransactionAdapter(SearchActivity.this, transactions);
             lv_transactions_search.setAdapter(adapter);
         });
 
 
-        transactions = db.getAllTransactionsWhereClause(DatabaseHelper.COL_TRANSACTION_BOOK_MARK + "=" +(Marked ? 1 : 0) + " AND " + DatabaseHelper.COL_TRANSACTION_PAID + "=" + (Paid ? 1 : 0));
+        transactions = db.getAllTransactionsWhereClause(DatabaseHelper.COL_TRANSACTION_BOOKMARK + "=" +(Marked ? 1 : 0) + " AND " + DatabaseHelper.COL_TRANSACTION_PAID + "=" + (Paid ? 1 : 0));
         db.setSettings();
 
         setStatisticsNumbers(transactions);
@@ -137,7 +172,7 @@ public class SearchActivity extends AppCompatActivity {
 
                 searchValue = s.toString();
 
-                List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0);
+                List<Transaction> transactions = db.searchTransactionByEverything(searchValue,Marked ? 1:0,Paid ? 1:0,1);
                 TransactionAdapter adapter = new TransactionAdapter(SearchActivity.this, transactions);
                 lv_transactions_search.setAdapter(adapter);
 

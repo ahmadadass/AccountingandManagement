@@ -1,8 +1,5 @@
 package com.example.accountingandmanagement;
 
-import static com.example.accountingandmanagement.MainActivity.user;
-
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,12 +18,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class statisticsActivity extends AppCompatActivity {
     public DatabaseHelper db;
 
     @Override
-    @SuppressLint({"MissingInflatedId", "LocalSuppress"})
+    @SuppressLint({"MissingInflatedId", "LocalSuppress", "RestrictedApi"})
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistics);
@@ -71,7 +71,7 @@ public class statisticsActivity extends AppCompatActivity {
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         ImageView im_account = findViewById(R.id.im_account);
         MaterialAutoCompleteTextView it_account_name = findViewById(R.id.it_account_name);
-        LinearLayout ly_add_account = findViewById(R.id.ly_add_account);
+        LinearLayout ly_inventory = findViewById(R.id.ly_inventory);
         LinearLayout ly_edit_fields = findViewById(R.id.ly_edit_fields);
         LinearLayout ly_book_marks = findViewById(R.id.ly_book_marks);
         LinearLayout ly_backup = findViewById(R.id.ly_backup);
@@ -85,21 +85,89 @@ public class statisticsActivity extends AppCompatActivity {
         networkListener.start(this);
 
         btn_add_income.setOnClickListener( e -> {
+
+            PopupMenu menu = new PopupMenu(this, e);
+            menu.inflate(R.menu.menu_plus);
+
+            menu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.income) {
+                    Intent intent = new Intent(statisticsActivity.this, AddEditIncomeExpenseActivity.class);
+                    intent.putExtra("Transaction_Title","Income");
+                    intent.putExtra("Selected_Transaction_Id","");
+                    startActivity(intent);
+                } else if (item.getItemId() == R.id.sell) {
+                    //openSell();
+                }
+                return true;
+            });
+
+            try {
+                Field[] fields = menu.getClass().getDeclaredFields();
+                for (Field field : fields) {
+                    if ("mPopup".equals(field.getName())) {
+                        field.setAccessible(true);
+                        Object menuPopupHelper = field.get(menu);
+                        Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
+                        Method setForceIcons = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
+                        setForceIcons.invoke(menuPopupHelper, true);
+                        break;
+                    }
+                }
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+
+            menu.show();
+            /*
             Intent intent = new Intent(statisticsActivity.this, AddEditIncomeExpenseActivity.class);
             intent.putExtra("Transaction_Title","Income");
             intent.putExtra("Selected_Transaction_Id","");
-            startActivity(intent);
+            startActivity(intent);*/
         });
 
         btn_add_expense.setOnClickListener( e -> {
+            PopupMenu menu = new PopupMenu(this, e);
+            menu.inflate(R.menu.menu_minus);
+
+            menu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.expense) {
+                    Intent intent = new Intent(statisticsActivity.this, AddEditIncomeExpenseActivity.class);
+                    intent.putExtra("Transaction_Title","Expense");
+                    intent.putExtra("Selected_Transaction_Id","");
+                    startActivity(intent);
+                } else if (item.getItemId() == R.id.buy) {
+                    //openBuy();
+                }
+                return true;
+            });
+
+            try {
+                Field[] fields = menu.getClass().getDeclaredFields();
+                for (Field field : fields) {
+                    if ("mPopup".equals(field.getName())) {
+                        field.setAccessible(true);
+                        Object menuPopupHelper = field.get(menu);
+                        Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
+                        Method setForceIcons = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
+                        setForceIcons.invoke(menuPopupHelper, true);
+                        break;
+                    }
+                }
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+
+            menu.show();
+            /*
             Intent intent = new Intent(statisticsActivity.this, AddEditIncomeExpenseActivity.class);
             intent.putExtra("Transaction_Title","Expense");
             intent.putExtra("Selected_Transaction_Id","");
-            startActivity(intent);
+            startActivity(intent);*/
         });
 
         btn_search.setOnClickListener( e -> {
             Intent intent = new Intent(statisticsActivity.this, SearchActivity.class);
+            intent.putExtra("SEARCH_SETTINGS",1);
             startActivity(intent);
         });
 
@@ -107,15 +175,18 @@ public class statisticsActivity extends AppCompatActivity {
             drawerLayout.openDrawer(findViewById(R.id.nv_drawer_menu));
         });
 
-        ly_add_account.setOnClickListener( e-> {
-            Toast.makeText(this, "ly_add_account", Toast.LENGTH_SHORT).show();
+        ly_inventory.setOnClickListener( e-> {
+            Intent intent = new Intent(statisticsActivity.this, InventoryActivity.class);
+            startActivity(intent);
         });
         ly_edit_fields.setOnClickListener( e->{
             Intent intent = new Intent(statisticsActivity.this, EditFieldsActivity.class);
             startActivity(intent);
         });
         ly_book_marks.setOnClickListener( e-> {
-            Toast.makeText(this, "ly_book_marks", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(statisticsActivity.this, SearchActivity.class);
+            intent.putExtra("SEARCH_SETTINGS",11);
+            startActivity(intent);
         });
         ly_backup.setOnClickListener( e-> {
             Toast.makeText(this, "ly_backup", Toast.LENGTH_SHORT).show();
@@ -297,6 +368,7 @@ public class statisticsActivity extends AppCompatActivity {
             }
         }
     }
+
 /*
     @Override
     public boolean onCreateOptionsMenu (Menu menu) {

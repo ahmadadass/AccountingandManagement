@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -28,6 +29,7 @@ public class AddPaymentMethodActivity extends AppCompatActivity {
     NavigationBarAdapter adapter ;
     DatabaseHelper db;
     String paymentMethod;
+    int currentSelectedPos = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,8 +68,7 @@ public class AddPaymentMethodActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                // Because we wrote it out fully, Java knows 100% that 'position' is an int!
-
+                currentSelectedPos = position;
                 // 1. Loop through and unselect everything
                 for (int i = 0; i < adapter.getCount(); i++) {
                     // We use getItem() and cast it, because your list is private inside the adapter
@@ -102,25 +103,25 @@ public class AddPaymentMethodActivity extends AppCompatActivity {
         paymentMethodListSUG.add("Cash");
         paymentMethodListSUG.add("Cried cared");
         paymentMethodListSUG.add("Other");
-        PaymentMethodAdapter paymentMethodAdapter = new PaymentMethodAdapter(this, paymentMethodList, new PaymentMethodAdapter.OnItemClickListener() {
+        PaymentMethodAdapter paymentMethodAdapter = new PaymentMethodAdapter(this, paymentMethodListSUG, new PaymentMethodAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                paymentMethod = paymentMethodList.get(position);
-
-                ArrayList<String> arrayList = Settings.stringToArray(settings.getPaymentMethodList());
+                paymentMethod = paymentMethodListSUG.get(position);
 
                 ArrayList<String> more_actions = new ArrayList<>();
                 more_actions.add("Edit");
                 more_actions.add("Delete");
 
+                paymentMethodList.add(paymentMethod);
+
                 navigationBarItems.clear();
-                for (String paymentMethod:arrayList){
+                for (String paymentMethod:paymentMethodList){
                     if (!paymentMethod.equals("Show More")) {
                         navigationBarItems.add(new NavigationBarItem(paymentMethod, "", R.drawable.ic_action_radio_button_unchecked, true, more_actions, false));
                     }
                 }
-                String  paymentMethodList = Settings.arrayToString(arrayList);
-                settings.setPaymentMethodList(paymentMethodList);
+                String  paymentMethodListS = Settings.arrayToString(paymentMethodList);
+                settings.setPaymentMethodList(paymentMethodListS);
 
                 db.updateSettings(settings.getNameV(),settings.getTypeV(),settings.getNotesV(),settings.getTimeV(),settings.getUserId(),settings.getPaymentMethodList(),settings.getTypeList());
 
@@ -142,7 +143,13 @@ public class AddPaymentMethodActivity extends AppCompatActivity {
         });
 
         btn_back_add_pament_method.setOnClickListener( e -> {
-            setResult(Activity.RESULT_OK);
+            Intent returnIntent = new Intent();
+
+            // 2. Put the position into the Intent
+            returnIntent.putExtra("RETURN_POS", currentSelectedPos);
+
+            // 3. Pass BOTH the RESULT_OK and the Intent containing the data!
+            setResult(Activity.RESULT_OK, returnIntent);
             finish();
         });
 
@@ -151,16 +158,16 @@ public class AddPaymentMethodActivity extends AppCompatActivity {
 
     public void showCustomDialog(String title, String editTextText) {
         final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.add_payment_method_dialog);
+        dialog.setContentView(R.layout.edit_text_save_cancel_dialog);
 
         // make background transparent
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
 
         // Access views within the dialog
-        TextView tv_add_payment_method_title = dialog.findViewById(R.id.tv_add_payment_method_title);
-        EditText et_add_payment_method_text = dialog.findViewById(R.id.et_add_payment_method_text);
-        Button btn_cancel_add_payment_method = dialog.findViewById(R.id.btn_cancel_payment_method);
-        Button btn_save_add_payment_method = dialog.findViewById(R.id.btn_save_payment_method);
+        TextView tv_add_payment_method_title = dialog.findViewById(R.id.tv_title_dialog);
+        EditText et_add_payment_method_text = dialog.findViewById(R.id.et_text_dialog);
+        Button btn_cancel_add_payment_method = dialog.findViewById(R.id.btn_cancel_dialog);
+        Button btn_save_add_payment_method = dialog.findViewById(R.id.btn_save_dialog);
 
         tv_add_payment_method_title.setText(title);
         if (editTextText != null || !editTextText.equals("")) {

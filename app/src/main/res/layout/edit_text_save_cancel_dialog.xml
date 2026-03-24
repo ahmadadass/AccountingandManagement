@@ -20,7 +20,7 @@
             android:layout_margin="16dp">
 
             <TextView
-                android:id="@+id/tv_add_payment_method_title"
+                android:id="@+id/tv_title_dialog"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
@@ -30,7 +30,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/ty_add_payment_method"
+                android:id="@+id/ty_text_dialog"
                 style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
@@ -48,10 +48,42 @@
                 app:boxStrokeWidthFocused="0sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_add_payment_method_title">
+                app:layout_constraintTop_toBottomOf="@+id/tv_title_dialog">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_add_payment_method_text"
+                    android:id="@+id/et_text_dialog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Please enter the text here"
+                    android:inputType="text"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/ly_text2_dialog"
+                style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:ems="10"
+                android:inputType="text"
+                android:text="Name"
+                android:textColor="@color/colorText"
+                android:textColorHint="@color/colorTinyText"
+                android:visibility="gone"
+                app:boxCornerRadiusBottomEnd="10sp"
+                app:boxCornerRadiusBottomStart="10sp"
+                app:boxCornerRadiusTopEnd="10sp"
+                app:boxCornerRadiusTopStart="10sp"
+                app:boxStrokeWidth="0sp"
+                app:boxStrokeWidthFocused="0sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ty_text_dialog">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_text2_dialog"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Please enter the text here"
@@ -61,7 +93,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/btn_cancel_payment_method"
+                android:id="@+id/btn_cancel_dialog"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
@@ -69,10 +101,10 @@
                 android:text="Cansel"
                 android:textColor="@color/colorText"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ty_add_payment_method" />
+                app:layout_constraintTop_toBottomOf="@+id/ly_text2_dialog" />
 
             <Button
-                android:id="@+id/btn_save_payment_method"
+                android:id="@+id/btn_save_dialog"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
@@ -80,7 +112,7 @@
                 android:text="Save"
                 android:textColor="@color/colorText"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ty_add_payment_method" />
+                app:layout_constraintTop_toBottomOf="@+id/ly_text2_dialog" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
